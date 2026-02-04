@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(ls -la \"D:\\\\TGBots\\\\FinancialBot\\\\src\\\\features\\\\parse_tbank\"\" 2>/dev/null || echo \"Directory check failed \")",
+      "Bash(tree:*)",
+      "Bash(copy \"D:\\\\TGBots\\\\FinancialBot\\\\data\\\\Operations Thu Jan 01 2026-Sat Jan 31 2026.csv\" \"D:\\\\TGBots\\\\FinancialBot\\\\tbank_converter\\\\tests\\\\fixtures\\\\sample_tbank.csv\")",
+      "Bash(xcopy \"D:\\\\TGBots\\\\FinancialBot\\\\data\\\\Operations Thu Jan 01 2026-Sat Jan 31 2026.csv\" \"D:\\\\TGBots\\\\FinancialBot\\\\tbank_converter\\\\tests\\\\fixtures\\\\sample_tbank.csv*\" /Y)",
+      "Bash(python -m venv:*)",
+      "Bash(.venvScriptspython.exe -m pip install --upgrade pip)",
+      "Bash(\".venv/Scripts/python.exe\" -m pip install --upgrade pip)",
+      "Bash(\".venv/Scripts/python.exe\" -m pip install -e .)",
+      "Bash(\".venv/Scripts/python.exe\" -m pip install -e \".[dev]\")",
+      "Bash(\".venv/Scripts/pytest\" tests/ -v)",
+      "Bash(\".venv/Scripts/tbank-convert\" -i \"tests/fixtures/sample_tbank.csv\" -o \"test_output.xlsx\")",
+      "Bash(\".venv/Scripts/tbank-convert\" -i \"../data/Operations Thu Jan 01 2026-Sat Jan 31 2026.csv\" -o \"full_output.xlsx\")",
+      "Bash(\".venv/Scripts/pytest\" tests/test_csv_reader.py::test_read_sample_csv -v)",
+      "Bash(\".venv/Scripts/tbank-convert\" --help)",
+      "Bash(uv --version:*)",
+      "Bash(uv sync:*)",
+      "Bash(uv run:*)"
+    ]
+  }
+}

@@ -1,16 +1,35 @@
 [project]
-name = "financialbot"
+name = "tbank-converter"
 version = "0.1.0"
-description = "Add your description here"
+description = "CLI утилита для конвертации CSV выписок Т-Банка в XLSX формат"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 dependencies = [
-    "alembic>=1.17.2",
-    "asyncpg>=0.31.0",
-    "fastapi>=0.124.2",
+    "click>=8.3.1",
+    "openpyxl>=3.1.5",
     "pydantic>=2.12.5",
-    "pydantic-settings>=2.12.0",
-    "pytelegrambotapi>=4.29.1",
-    "sqlalchemy>=2.0.45",
-    "uvicorn>=0.38.0",
+    "pyyaml>=6.0.3",
 ]
+
+[project.scripts]
+tbank-convert = "tbank_converter.cli:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=6.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=6.0.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

@@ -8,5 +8,27 @@ wheels/
 
 # Virtual environments
 .venv
+venv/
+env/
 
+# Environment variables
 .env
+.env.local
+
+# Data
+data/
+
+# T-Bank converter outputs
+tbank_converter/*.xlsx
+tbank_converter/**/__pycache__/
+tbank_converter/*.egg-info/
+src/*.xlsx
+src/**/*.xlsx
+
+# UV cache
+.uv_cache/
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/

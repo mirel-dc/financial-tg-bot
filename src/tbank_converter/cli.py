@@ -32,10 +32,10 @@ from tbank_converter.pipeline import convert
     help="Path to custom config file (default: configs/default.yaml)",
 )
 def main(input_path: Path, output_path: Path, config_path: Path | None) -> None:
-    """Convert T-Bank CSV statements to XLSX format.
+    """Convert T-Bank CSV statements to XLSX with double-entry bookkeeping.
 
-    Reads CSV export from T-Bank, applies categorization rules,
-    and creates XLSX file with formulas for Google Sheets import.
+    Reads CSV export from T-Bank, applies double-entry bookkeeping logic,
+    and creates XLSX file ready for import into financial tracking spreadsheets.
     """
     try:
         click.echo("Converting T-Bank CSV to XLSX...")
@@ -54,8 +54,7 @@ def main(input_path: Path, output_path: Path, config_path: Path | None) -> None:
             )
             click.echo(f"  Period: {period}")
 
-        click.echo(f"  Total income: {report.total_income:.2f} RUB")
-        click.echo(f"  Total expense: {report.total_expense:.2f} RUB")
+        click.echo(f"  Categories used: {len(report.categories)}")
         click.echo(f"  Output: {output_path.absolute()}")
 
     except FileNotFoundError as e:

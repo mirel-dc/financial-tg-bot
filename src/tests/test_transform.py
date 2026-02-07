@@ -5,6 +5,9 @@ from datetime import datetime
 from decimal import Decimal
 
 from tbank_converter.domain.transform import DataTransformer
+from tbank_converter.domain.models import Operation
+
+from tests.helpers import make_operation
 
 
 def test_parse_date():
@@ -69,3 +72,42 @@ def test_transform_operation():
     assert operation.operation_amount == Decimal("-100.50")
     assert operation.description == "Пятёрочка"
     assert operation.bank_category == "Супермаркеты"
+
+
+def test_merge_paired_transfers():
+    """Test that paired inter-account transfers are merged into single operations."""
+    transformer = DataTransformer()
+
+    # Create two paired transfer operations
+    op1 = make_operation(
+        operation_date=datetime(2026, 1, 27, 16, 25, 21),
+        card_number="*7280",  # Leaving from this account
+        operation_amount=Decimal("-10000.00"),  # Negative = leaving
+        payment_amount=Decimal("-10000.00"),
+        total_payment_amount=Decimal("-10000.00"),
+        bank_category="Переводы",
+        description="Между своими счетами",
+    )
+
+    op2 = make_operation(
+        operation_date=datetime(2026, 1, 27, 16, 25, 22),  # 1 second later
+        card_number="*8878",  # Entering this account
+        operation_amount=Decimal("10000.00"),  # Positive = entering
+        payment_amount=Decimal("10000.00"),
+        total_payment_amount=Decimal("10000.00"),
+        bank_category="Переводы",
+        description="Между своими счетами",
+    )
+
+    operations = [op1, op2]
+    merged = transformer.merge_paired_transfers(operations)
+
+    # Should be merged into 1 operation
+    assert len(merged) == 1
+    merged_op = merged[0]
+
+    # Check fields
+    assert merged_op.operation_amount == Decimal("10000.00")  # Positive amount
+    assert merged_op.credit_account == "*7280"  # Money leaving from this
+    assert merged_op.debit_account == "*8878"  # Money entering here
+    assert merged_op.description == "Между своими счетами"

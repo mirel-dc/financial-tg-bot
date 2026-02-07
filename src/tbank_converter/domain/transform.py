@@ -1,6 +1,6 @@
 """Data transformation utilities."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 
 from tbank_converter.domain.models import Operation
@@ -34,13 +34,13 @@ class DataTransformer:
             payment_date = None
             if raw_data["payment_date"].strip():
                 try:
-                    payment_date = self.parse_date(raw_data["payment_date"])
+                    payment_date = self.parse_date(raw_data["payment_date"], self.date_format)
                 except ValueError:
                     # Try date-only format
                     payment_date = self.parse_date(raw_data["payment_date"], "%d.%m.%Y")
 
             return Operation(
-                operation_date=self.parse_date(raw_data["operation_date"]),
+                operation_date=self.parse_date(raw_data["operation_date"], self.date_format),
                 payment_date=payment_date,
                 card_number=self.normalize_string(raw_data["card_number"]),
                 status=self.normalize_string(raw_data["status"]),
@@ -116,3 +116,84 @@ class DataTransformer:
             Normalized string.
         """
         return value.strip()
+
+    @staticmethod
+    def merge_paired_transfers(operations: list[Operation]) -> list[Operation]:
+        """Merge paired inter-account transfers into single operations.
+
+        T-Bank exports "Между своими счетами" transfers as two separate operations:
+        - One with negative amount (money leaving account)
+        - One with positive amount (money entering account)
+
+        This method merges them into single operations with both debit and credit filled.
+
+        Args:
+            operations: List of operations to process.
+
+        Returns:
+            List with paired transfers merged (short than input).
+        """
+        if not operations:
+            return operations
+
+        merged = []
+        skip_indices = set()
+
+        for i, op in enumerate(operations):
+            if i in skip_indices:
+                continue
+
+            # Look for paired transfers
+            if "между своими счетами" in op.description.lower():
+                # Find matching pair within 5 seconds
+                for j in range(i + 1, min(i + 10, len(operations))):
+                    other = operations[j]
+                    if j in skip_indices:
+                        continue
+
+                    if "между своими счетами" in other.description.lower():
+                        # Check if amounts match (opposite signs, same absolute value)
+                        if (
+                            abs(op.operation_amount) == abs(other.operation_amount)
+                            and op.operation_amount != other.operation_amount
+                            and abs(
+                                (other.operation_date - op.operation_date).total_seconds()
+                            )
+                            <= 5
+                        ):
+                            # Found pair! Determine debit/credit by amount sign
+                            if op.operation_amount < 0:
+                                leaving, entering = op, other
+                            else:
+                                leaving, entering = other, op
+
+                            merged_op = Operation(
+                                operation_date=op.operation_date,
+                                payment_date=op.payment_date,
+                                card_number=op.card_number,
+                                status=op.status,
+                                operation_amount=abs(op.operation_amount),
+                                operation_currency=op.operation_currency,
+                                payment_amount=op.payment_amount,
+                                payment_currency=op.payment_currency,
+                                cashback=op.cashback,
+                                bank_category=op.bank_category,
+                                mcc=op.mcc,
+                                description=op.description,
+                                bonus_count=op.bonus_count,
+                                investment_amount=op.investment_amount,
+                                total_payment_amount=op.total_payment_amount,
+                                debit_account=entering.card_number,
+                                credit_account=leaving.card_number,
+                            )
+
+                            merged.append(merged_op)
+                            skip_indices.add(j)
+                            break
+                else:
+                    # No pair found, keep as is
+                    merged.append(op)
+            else:
+                merged.append(op)
+
+        return merged

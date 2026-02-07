@@ -49,20 +49,23 @@ class ConversionPipeline:
         if not operations:
             raise ValueError("No operations found in CSV file")
 
-        # Step 3: Apply categorization (bank category → description mapping → uncategorized)
-        self.categorizer.apply_categories(operations)
+        # Step 3: Merge paired inter-account transfers
+        operations = self.transformer.merge_paired_transfers(operations)
 
-        # Step 4: Collect unique categories from operations
-        unique_categories = sorted(set(op.bank_category for op in operations if op.bank_category))
+        # Step 4: Apply double-entry bookkeeping logic
+        operations = self.categorizer.apply_double_entry(operations)
 
-        # Step 5: Build report
+        # Step 5: Collect unique categories from operations (for reporting)
+        unique_categories = sorted(set(op.category for op in operations if op.category))
+
+        # Step 6: Build report
         report = Report(
             operations=operations,
             categories=unique_categories,
         )
 
-        # Step 6: Write XLSX
-        writer = XLSXWriter(report, self.config)
+        # Step 7: Write XLSX
+        writer = XLSXWriter(report, currency_code=self.config.settings.default_currency)
         writer.write(output_xlsx)
 
         return report

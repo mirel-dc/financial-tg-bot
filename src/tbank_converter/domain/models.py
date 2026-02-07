@@ -26,10 +26,12 @@ class Operation:
     investment_amount: Decimal
     total_payment_amount: Decimal
 
-    # Categorization fields (3 columns)
-    auto_category: str = ""
-    manual_category: str = ""
-    final_category: str = ""  # Will be a formula in Excel
+    # Double-entry bookkeeping fields (5 columns)
+    debit_account: str = ""      # Дебет (Куда)
+    credit_account: str = ""     # Кредит (Откуда)
+    category: str = ""           # Категория (только для расходов)
+    subcategory: str = ""        # Подкатегория (только для расходов)
+    comment: str = ""            # Комментарий (пустой, для пользователя)
 
 
 @dataclass
@@ -40,8 +42,6 @@ class Report:
     categories: list[str]
     period_start: datetime | None = None
     period_end: datetime | None = None
-    total_income: Decimal = field(default_factory=lambda: Decimal("0"))
-    total_expense: Decimal = field(default_factory=lambda: Decimal("0"))
 
     def __post_init__(self):
         """Calculate statistics after initialization."""
@@ -50,9 +50,3 @@ class Report:
             if dates:
                 self.period_start = min(dates)
                 self.period_end = max(dates)
-
-            for op in self.operations:
-                if op.operation_amount > 0:
-                    self.total_income += op.operation_amount
-                else:
-                    self.total_expense += op.operation_amount

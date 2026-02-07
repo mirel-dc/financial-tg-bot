@@ -1,6 +1,6 @@
 # T-Bank CSV to XLSX Converter
 
-CLI утилита для конвертации CSV выписок Т-Банка в XLSX формат с автоматической категоризацией.
+CLI утилита для конвертации CSV выписок Т-Банка в XLSX формат с двойной записью для импорта в Google Sheets.
 
 ## Быстрый старт
 
@@ -23,25 +23,16 @@ uv run tbank-convert -i input.csv -o output.xlsx
 ## Использование с Makefile
 
 ```bash
-# Показать доступные команды
-make help
-
-# Синхронизировать зависимости
-make sync
-
-# Запустить тесты
-make test
-
-# Запустить с покрытием
-make coverage
-
-# Конвертировать файл
-make run INPUT=input.csv OUTPUT=output.xlsx
+make help       # Показать доступные команды
+make sync       # Синхронизировать зависимости
+make test       # Запустить тесты
+make coverage   # Запустить с покрытием
+make run INPUT=input.csv OUTPUT=output.xlsx  # Конвертировать файл
 ```
 
 ## Документация
 
-Полная документация находится в [src/README.md](src/README.md).
+Подробная документация — в [src/README.md](src/README.md).
 
 ## Структура проекта
 
@@ -60,26 +51,23 @@ FinancialBot/
 ## Технологии
 
 - **Python 3.11+**
-- **uv** - быстрый менеджер пакетов и окружений
-- **Click** - CLI интерфейс
-- **OpenPyXL** - работа с XLSX
-- **Pydantic** - валидация данных
-- **PyYAML** - конфигурация
+- **uv** — быстрый менеджер пакетов и окружений
+- **Click** — CLI интерфейс
+- **OpenPyXL** — работа с XLSX
+- **Pydantic** — валидация конфигурации
+- **PyYAML** — парсинг YAML конфигов
 
 ## Разработка
 
 Проект полностью использует [uv](https://github.com/astral-sh/uv) для управления зависимостями и окружениями.
 
 ```bash
-# Синхронизировать зависимости
-cd src && uv sync --extra dev
-
-# Запустить тесты
-uv run pytest tests/ -v
-
-# С покрытием
-uv run pytest --cov=tbank_converter tests/
-
-# Запустить CLI
-uv run tbank-convert --help
+cd src && uv sync --extra dev   # Синхронизировать зависимости
+uv run pytest tests/ -v          # Запустить тесты
+uv run pytest --cov=tbank_converter tests/  # С покрытием
+uv run tbank-convert --help      # Справка CLI
 ```
+
+## Лицензия
+
+MIT

@@ -7,134 +7,119 @@ from pathlib import Path
 import pytest
 from openpyxl import load_workbook
 
-from tbank_converter.config import Config, Settings
 from tbank_converter.domain.models import Operation, Report
 from tbank_converter.io.xlsx_writer import XLSXWriter
 
-
-@pytest.fixture
-def sample_config():
-    """Create sample config."""
-    return Config(
-        version="1.0",
-        settings=Settings(
-            uncategorized_label="Нет категории",
-            ignore_label="Не учитывать",
-        ),
-        categories=["Супермаркеты", "Рестораны", "Не учитывать", "Нет категории"],
-        category_colors={
-            "Супермаркеты": "C6EFCE",
-            "Рестораны": "FFC7CE",
-            "Не учитывать": "D9D9D9",
-            "Нет категории": "FFFFFF",
-        },
-    )
+from tests.helpers import make_operation
 
 
 @pytest.fixture
 def sample_report():
-    """Create sample report."""
+    """Create sample report with double-entry fields populated."""
     operations = [
-        Operation(
+        make_operation(
             operation_date=datetime(2026, 1, 15, 12, 0, 0),
-            payment_date=None,
-            card_number="*1234",
-            status="OK",
             operation_amount=Decimal("-100.50"),
-            operation_currency="RUB",
             payment_amount=Decimal("-100.50"),
-            payment_currency="RUB",
-            cashback=Decimal("0"),
+            total_payment_amount=Decimal("-100.50"),
             bank_category="Супермаркеты",
             mcc="5411",
             description="Пятёрочка",
             bonus_count="0",
-            investment_amount=Decimal("0"),
-            total_payment_amount=Decimal("-100.50"),
+            debit_account="расходы",
+            credit_account="Счёт ТБанка",
+            category="продукты",
+            subcategory="еда",
         ),
-        Operation(
+        make_operation(
             operation_date=datetime(2026, 1, 16, 14, 30, 0),
-            payment_date=None,
-            card_number="*1234",
-            status="OK",
-            operation_amount=Decimal("-50.00"),
-            operation_currency="RUB",
-            payment_amount=Decimal("-50.00"),
-            payment_currency="RUB",
-            cashback=Decimal("0"),
-            bank_category="Рестораны",
-            mcc="5812",
-            description="Макдоналдс",
+            operation_amount=Decimal("10000.00"),
+            payment_amount=Decimal("10000.00"),
+            total_payment_amount=Decimal("10000.00"),
+            description="Зарплата",
             bonus_count="0",
-            investment_amount=Decimal("0"),
-            total_payment_amount=Decimal("-50.00"),
+            debit_account="Счёт ТБанка",
+            credit_account="доходы",
         ),
     ]
 
     return Report(
         operations=operations,
-        categories=["Супермаркеты", "Рестораны", "Нет категории"],
+        categories=["продукты"],
     )
 
 
-def test_xlsx_creates_file(tmp_path, sample_report, sample_config):
+def test_xlsx_creates_file(tmp_path, sample_report):
     """Test that XLSX file is created."""
     output_path = tmp_path / "test.xlsx"
 
-    writer = XLSXWriter(sample_report, sample_config)
+    writer = XLSXWriter(sample_report)
     writer.write(output_path)
 
     assert output_path.exists()
 
 
-def test_xlsx_has_formulas(tmp_path, sample_report, sample_config):
-    """Test that XLSX contains expected formulas in summary."""
+def test_xlsx_has_correct_headers(tmp_path, sample_report):
+    """Test that XLSX has correct column headers for double-entry format."""
     output_path = tmp_path / "test.xlsx"
 
-    writer = XLSXWriter(sample_report, sample_config)
-    writer.write(output_path)
-
-    # Load and check formulas
-    wb = load_workbook(output_path)
-    ws = wb.active
-
-    # Check summary has SUMIF formulas (summary is in column G, starting at row 2)
-    summary_data_row = 2
-    sum_cell = ws.cell(row=summary_data_row, column=7)  # Column G
-    assert sum_cell.value.startswith("=SUMIF")
-
-    wb.close()
-
-
-def test_xlsx_has_correct_headers(tmp_path, sample_report, sample_config):
-    """Test that XLSX has correct column headers."""
-    output_path = tmp_path / "test.xlsx"
-
-    writer = XLSXWriter(sample_report, sample_config)
+    writer = XLSXWriter(sample_report)
     writer.write(output_path)
 
     wb = load_workbook(output_path)
     ws = wb.active
 
-    # Main data headers
-    assert ws["A1"].value == "Дата операции"
-    assert ws["B1"].value == "Описание"
-    assert ws["C1"].value == "Категория"
-    assert ws["D1"].value == "Сумма операции"
-
-    # Summary headers (to the right)
-    assert ws["F1"].value == "Категория"
-    assert ws["G1"].value == "Сумма"
-    assert ws["H1"].value == "Операций"
+    # Check 9 column headers
+    assert ws["A1"].value == "Дата"
+    assert ws["B1"].value == "Дебет (Куда)"
+    assert ws["C1"].value == "Кредит (Откуда)"
+    assert ws["D1"].value == "Сумма"
+    assert ws["E1"].value == "Валюта"
+    assert ws["F1"].value == "Описание"
+    assert ws["G1"].value == "Комментарий"
+    assert ws["H1"].value == "Категория"
+    assert ws["I1"].value == "Подкатегория"
 
     wb.close()
 
 
-def test_xlsx_sheet_name_from_date(tmp_path, sample_report, sample_config):
+def test_xlsx_data_values(tmp_path, sample_report):
+    """Test that XLSX contains correct data values."""
+    output_path = tmp_path / "test.xlsx"
+
+    writer = XLSXWriter(sample_report)
+    writer.write(output_path)
+
+    wb = load_workbook(output_path)
+    ws = wb.active
+
+    # Check first operation (expense)
+    assert ws["A2"].value == "2026-01-15"  # Date
+    assert ws["B2"].value == "расходы"  # Debit
+    assert ws["C2"].value == "Счёт ТБанка"  # Credit
+    assert ws["D2"].value == 100.50  # Amount (positive)
+    assert ws["E2"].value == "RUB"  # Currency
+    assert ws["F2"].value == "Пятёрочка"  # Description
+    assert ws["G2"].value in ("", None)  # Comment (empty - openpyxl uses None for empty cells)
+    assert ws["H2"].value == "продукты"  # Category
+    assert ws["I2"].value == "еда"  # Subcategory
+
+    # Check second operation (income)
+    assert ws["A3"].value == "2026-01-16"  # Date
+    assert ws["B3"].value == "Счёт ТБанка"  # Debit
+    assert ws["C3"].value == "доходы"  # Credit
+    assert ws["D3"].value == 10000.00  # Amount (positive)
+    assert ws["H3"].value in ("", None)  # Category (empty for income)
+    assert ws["I3"].value in ("", None)  # Subcategory (empty for income)
+
+    wb.close()
+
+
+def test_xlsx_sheet_name_from_date(tmp_path, sample_report):
     """Test that sheet name is set from report period."""
     output_path = tmp_path / "test.xlsx"
 
-    writer = XLSXWriter(sample_report, sample_config)
+    writer = XLSXWriter(sample_report)
     writer.write(output_path)
 
     wb = load_workbook(output_path)
@@ -146,32 +131,38 @@ def test_xlsx_sheet_name_from_date(tmp_path, sample_report, sample_config):
     wb.close()
 
 
-def test_xlsx_summary_all_categories(tmp_path, sample_report, sample_config):
-    """Test that summary includes all categories from config."""
+def test_xlsx_no_formulas(tmp_path, sample_report):
+    """Test that XLSX has no formulas (summary table removed)."""
     output_path = tmp_path / "test.xlsx"
 
-    writer = XLSXWriter(sample_report, sample_config)
+    writer = XLSXWriter(sample_report)
     writer.write(output_path)
 
     wb = load_workbook(output_path)
     ws = wb.active
 
-    # Check that summary shows all categories from config (except "Не учитывать")
-    # Config has: Супермаркеты, Рестораны, Не учитывать, Нет категории
-    # Summary should show: Супермаркеты, Рестораны, Нет категории
+    # Check that there are no SUMIF/COUNTIF formulas anywhere
+    for row in ws.iter_rows():
+        for cell in row:
+            if cell.value and isinstance(cell.value, str):
+                assert "SUMIF" not in cell.value.upper()
+                assert "COUNTIF" not in cell.value.upper()
 
-    # F2, F3, F4 should contain category names
-    assert ws["F2"].value == "Супермаркеты"
-    assert ws["F3"].value == "Рестораны"
+    wb.close()
 
-    # Check that G2 (sum column) has SUMIF formula
-    sum_cell = ws["G2"]
-    assert sum_cell.value is not None
-    assert "SUMIF" in str(sum_cell.value).upper()
 
-    # Check that H2 (count column) has COUNTIF formula
-    count_cell = ws["H2"]
-    assert count_cell.value is not None
-    assert "COUNTIF" in str(count_cell.value).upper()
+def test_xlsx_amount_formatting(tmp_path, sample_report):
+    """Test that amount column has correct number format."""
+    output_path = tmp_path / "test.xlsx"
+
+    writer = XLSXWriter(sample_report)
+    writer.write(output_path)
+
+    wb = load_workbook(output_path)
+    ws = wb.active
+
+    # Check that D2 (amount) has currency format
+    amount_cell = ws["D2"]
+    assert "₽" in amount_cell.number_format
 
     wb.close()

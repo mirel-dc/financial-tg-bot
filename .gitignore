@@ -28,7 +28,16 @@ src/**/*.xlsx
 # UV cache
 .uv_cache/
 
+# Personal configs (keep only default.yaml in repo)
+src/configs/*.yaml
+!src/configs/default.yaml
+
 # Test coverage
 .coverage
 htmlcov/
 .pytest_cache/
+
+.claude/
+
+Sofya.yaml
+Valery.yaml

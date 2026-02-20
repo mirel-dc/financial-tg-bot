@@ -34,27 +34,17 @@ HEADERS = [
     "Подкатегория",
 ]
 
-CURRENCY_SYMBOLS: dict[str, str] = {
-    "RUB": "₽",
-    "USD": "$",
-    "EUR": "€",
-    "GBP": "£",
-    "CNY": "¥",
-}
-
 
 class XLSXWriter:
     """Writes Report to XLSX file with double-entry bookkeeping format."""
 
-    def __init__(self, report: Report, currency_code: str = "RUB"):
+    def __init__(self, report: Report):
         """Initialize writer.
 
         Args:
             report: Report object with operations.
-            currency_code: ISO currency code (e.g. "RUB", "USD").
         """
         self.report = report
-        self.currency_symbol = CURRENCY_SYMBOLS.get(currency_code, currency_code)
 
     def write(self, output_path: Path) -> None:
         """Write report to XLSX file.
@@ -128,8 +118,8 @@ class XLSXWriter:
         """Apply number formatting and alignment."""
         data_end_row = len(self.report.operations) + 1  # +1 for header
 
-        # Amount column: number format with currency symbol
-        number_format = f'#,##0.00 {self.currency_symbol}'
+        # Amount column: pure number format (no currency symbol)
+        number_format = "#,##0.00"
         for row in range(2, data_end_row + 1):
             cell = ws.cell(row=row, column=COL_AMOUNT)
             cell.number_format = number_format

@@ -46,7 +46,7 @@ class Config(BaseModel):
 
     @model_validator(mode='after')
     def validate_mappings(self) -> 'Config':
-        """Validate that mapped categories exist in categories list."""
+        """Validate that mapped categories exist in the categories list."""
         category_set = set(self.categories)
 
         # Validate description_mapping

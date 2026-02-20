@@ -38,6 +38,7 @@ htmlcov/
 .pytest_cache/
 
 .claude/
+.idea/
 
 Sofya.yaml
 Valery.yaml

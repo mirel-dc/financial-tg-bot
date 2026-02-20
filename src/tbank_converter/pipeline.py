@@ -65,7 +65,7 @@ class ConversionPipeline:
         )
 
         # Step 7: Write XLSX
-        writer = XLSXWriter(report, currency_code=self.config.settings.default_currency)
+        writer = XLSXWriter(report)
         writer.write(output_xlsx)
 
         return report

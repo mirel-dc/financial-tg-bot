@@ -161,8 +161,8 @@ def test_xlsx_amount_formatting(tmp_path, sample_report):
     wb = load_workbook(output_path)
     ws = wb.active
 
-    # Check that D2 (amount) has currency format
+    # Check that D2 (amount) has pure number format
     amount_cell = ws["D2"]
-    assert "₽" in amount_cell.number_format
+    assert amount_cell.number_format == "#,##0.00"
 
     wb.close()

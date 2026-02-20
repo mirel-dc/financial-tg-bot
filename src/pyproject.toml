@@ -5,9 +5,11 @@ description = "CLI утилита для конвертации CSV выписо
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "aiogram>=3.25.0",
     "click>=8.3.1",
     "openpyxl>=3.1.5",
     "pydantic>=2.12.5",
+    "python-dotenv>=1.2.1",
     "pyyaml>=6.0.3",
 ]
 

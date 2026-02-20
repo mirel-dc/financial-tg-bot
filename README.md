@@ -28,6 +28,22 @@ make sync       # Синхронизировать зависимости
 make test       # Запустить тесты
 make coverage   # Запустить с покрытием
 make run INPUT=input.csv OUTPUT=output.xlsx  # Конвертировать файл
+make bot        # Запустить Telegram бота
+```
+
+## Работа с Docker
+
+Для запуска бота в Docker контейнере:
+
+```bash
+# Собрать образ
+make docker-build
+
+# Запустить контейнер (использует настройки из src/.env)
+make docker-run
+
+# Остановить и удалить контейнер
+make docker-stop
 ```
 
 ## Документация

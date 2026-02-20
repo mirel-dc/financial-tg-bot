@@ -1,0 +1,16 @@
+__pycache__/
+*.py[oc]
+build/
+dist/
+*.egg-info
+.venv
+venv/
+env/
+.env
+.git
+.gitignore
+data/
+src/tg_bot/temp/
+.pytest_cache/
+.coverage
+htmlcov/

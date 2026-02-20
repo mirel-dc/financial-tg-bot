@@ -1,4 +1,4 @@
-.PHONY: help install sync test coverage run clean
+.PHONY: help install sync test coverage run clean bot docker-build docker-run docker-stop
 
 help:
 	@echo "Доступные команды:"
@@ -8,6 +8,10 @@ help:
 	@echo "  make coverage   - Запустить тесты с покрытием"
 	@echo "  make run        - Запустить конвертер (требуется INPUT и OUTPUT)"
 	@echo "  make clean      - Очистить временные файлы"
+	@echo "  make bot        - Запустить Telegram бота"
+	@echo "  make docker-build - Собрать Docker образ"
+	@echo "  make docker-run   - Запустить бота в Docker"
+	@echo "  make docker-stop  - Остановить Docker контейнер"
 
 install:
 	@echo "Установка uv..."
@@ -28,6 +32,19 @@ run:
 		exit 1; \
 	fi
 	cd src && uv run tbank-convert -i $(INPUT) -o $(OUTPUT)
+
+bot:
+	cd src && uv run python tg_bot/main.py
+
+docker-build:
+	docker build -t tbank-bot .
+
+docker-run:
+	docker run -d --name tbank-bot-container --env-file src/.env tbank-bot
+
+docker-stop:
+	docker stop tbank-bot-container
+	docker rm tbank-bot-container
 
 clean:
 	cd src && rm -rf .pytest_cache/ .coverage htmlcov/ *.xlsx

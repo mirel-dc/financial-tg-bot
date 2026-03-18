@@ -1,0 +1,17 @@
+services:
+  bot:
+    build:
+      context: src
+      dockerfile: Dockerfile
+    container_name: financial-bot
+    restart: unless-stopped
+    env_file:
+      - ./src/.env
+    volumes:
+      - ./src/configs:/app/src/configs
+      - ./src/tg_bot/temp:/app/src/tg_bot/temp
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

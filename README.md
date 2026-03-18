@@ -33,18 +33,20 @@ make bot        # Запустить Telegram бота
 
 ## Работа с Docker
 
-Для запуска бота в Docker контейнере:
+Для запуска бота в Docker через `docker compose`:
 
 ```bash
-# Собрать образ
-make docker-build
+# Поднять контейнер (build + up, использует настройки из src/.env)
+make docker-up
 
-# Запустить контейнер (использует настройки из src/.env)
-make docker-run
+# Посмотреть логи
+make docker-logs
 
-# Остановить и удалить контейнер
-make docker-stop
+# Остановить и удалить контейнер(ы)
+make docker-down
 ```
+
+Примечание: цели `make docker-run` и `make docker-stop` оставлены как алиасы для совместимости.
 
 ## Документация
 

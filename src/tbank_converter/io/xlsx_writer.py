@@ -118,8 +118,8 @@ class XLSXWriter:
         """Apply number formatting and alignment."""
         data_end_row = len(self.report.operations) + 1  # +1 for header
 
-        # Amount column: pure number format (no currency symbol)
-        number_format = "#,##0.00"
+        # Amount column: "General" format for easier data transfer
+        number_format = "General"
         for row in range(2, data_end_row + 1):
             cell = ws.cell(row=row, column=COL_AMOUNT)
             cell.number_format = number_format
